@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "189316452241",
+    "firebase_url": "https://rate-my-dog-5aadc.firebaseio.com",
+    "project_id": "rate-my-dog-5aadc",
+    "storage_bucket": "rate-my-dog-5aadc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:189316452241:android:bb9d2e6da8234313",
+        "android_client_info": {
+          "package_name": "w.sean.ratemydog"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "189316452241-rirjt1kfijrd8s3e66km2cugh5rhn85h.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "w.sean.ratemydog",
+            "certificate_hash": "2ec441991c0e433fd51e09333d9b8068d51c7bde"
+          }
+        },
+        {
+          "client_id": "189316452241-tpu8mr3a8p6sscf8ki09up6f72c227gk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGoMw8BIk_v4MXof68UjBKYv0A5irJ_Ls"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "189316452241-tpu8mr3a8p6sscf8ki09up6f72c227gk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

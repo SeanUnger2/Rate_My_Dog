@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.BottomNavigationView android:id="@+id/bnv"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:itemBackground="@color/colorPrimary"
+    app:itemIconTint="@color/colorWhite"
+    app:itemTextColor="@color/colorWhite"
+    app:menu="@menu/bottom_navigation_main"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+</android.support.design.widget.BottomNavigationView>
