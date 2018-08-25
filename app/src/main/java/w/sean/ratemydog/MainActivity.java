@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //if the user kills the activity and restarts it, make sure we pick up where we left off
         if(savedInstanceState !=null && savedInstanceState.getInt(START_POSITION)>-1){
             startPosition = savedInstanceState.getInt(START_POSITION);
         }else{
@@ -61,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
+        //make sure we're connected to the internet
         NetworkUtils.checkNetworkStatus(this);
         retrieveRecentlyAddedDogs();
         setBottomBar();
@@ -103,8 +105,11 @@ public class MainActivity extends AppCompatActivity {
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Dog dog = snapshot.getValue(Dog.class);
                     arrDogs.add(0, dog);
+                    //array of dog id's in firebase
                     arrDogKeys.add(0, snapshot.getKey());
                 }
+                //we don't need to reset the whole adapter every time the database gets updated or the
+                //user pauses and restarts the activity
                 if(activityReseting) {
                     setAdapter();
                     activityReseting = false;
@@ -161,18 +166,17 @@ public class MainActivity extends AppCompatActivity {
     private void setBottomBar() {
         BottomNavigationView bottomNavigationView = findViewById(R.id.bnv);
         bottomNavigationView.setOnNavigationItemSelectedListener(
-                new BottomNavigationView.OnNavigationItemSelectedListener() {
-                    @Override
-                    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                        ToolbarUtils.setBottomNavigation(MainActivity.this, item.getItemId());
-                        return true;
-                    }
-                });
+            new BottomNavigationView.OnNavigationItemSelectedListener() {
+                @Override
+                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                    ToolbarUtils.setBottomNavigation(MainActivity.this, item.getItemId());
+                    return true;
+                }
+            });
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outstate){
-        System.out.println("current item on save " + currentItem);
         outstate.putInt(START_POSITION, currentItem);
         super.onSaveInstanceState(outstate);
     }

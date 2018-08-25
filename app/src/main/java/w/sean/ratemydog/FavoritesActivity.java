@@ -47,7 +47,6 @@ public class FavoritesActivity extends AppCompatActivity {
     private ArrayList<Dog> arrFavorites;
     private long favoritesSize;
     private static final String TAG = "FavoritesActivity";
-    private static final String ALERT = "alert";
     private Dog currentDog;
     private int currentDialogType;
     private static final int IMAGE = 0;
@@ -62,9 +61,11 @@ public class FavoritesActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favorites);
 
+        //check network status
         NetworkUtils.checkNetworkStatus(this);
 
-        System.out.println("on create");
+        //if the user had the "more info" alert open right before stopping and restarting the activity, make sure it shows
+        //up as expected when the activity gets recreated
         if(savedInstanceState!=null ){
             currentDialogType = savedInstanceState.getInt(DIALOG_TYPE);
             currentDog = (Dog)savedInstanceState.getSerializable(CURRENT_DOG);
@@ -74,7 +75,6 @@ public class FavoritesActivity extends AppCompatActivity {
                 }
             }
         }else{
-            System.out.println("saved instance state is null");
             currentDialogType = NO_DIALOG;
             currentDog = null;
         }
@@ -101,20 +101,24 @@ public class FavoritesActivity extends AppCompatActivity {
     private void setBottomBar() {
         BottomNavigationView bottomNavigationView = findViewById(R.id.bnv);
         bottomNavigationView.setOnNavigationItemSelectedListener(
-                new BottomNavigationView.OnNavigationItemSelectedListener() {
-                    @Override
-                    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                        ToolbarUtils.setBottomNavigation(FavoritesActivity.this, item.getItemId());
-                        return true;
-                    }
-                });
+            new BottomNavigationView.OnNavigationItemSelectedListener() {
+                @Override
+                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                    ToolbarUtils.setBottomNavigation(FavoritesActivity.this, item.getItemId());
+                    return true;
+                }
+            });
     }
 
     private void retrieveFavorites(){
+        //each dog in the favorites node on firebase is just a pointer to the master list of dogs (in a different node). So
+        //we need to make 2 callbacks here: one to get each dog from the favorites node, and one to get each of those dogs
+        //from the master list
         Dog.getFavoritesNode(this, new OnGetDataListener() {
             @Override
             public void onSuccess(DataSnapshot dataSnapshot) {
                 favoritesSize = dataSnapshot.getChildrenCount();
+                //array to be used in the array adapter for the listview
                 arrFavorites = new ArrayList<>();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     final String dogKey = snapshot.getKey();
@@ -132,6 +136,7 @@ public class FavoritesActivity extends AppCompatActivity {
                                 accountReference.child("USERS").child(sharedPrefUtils.getUserId())
                                         .child("FAVORITES").child(dogKey).removeValue();
                             }
+                            //we have gone through all the dogs in the favorites list
                             if(arrFavorites.size() == favoritesSize){
                                 setAdapter();
                             }
@@ -154,6 +159,7 @@ public class FavoritesActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Log.i(TAG, "Clicked Item " + position);
+                //show more info dialog on click of a list item
                 showMoreInfoDialog(arrFavorites.get(position));
             }
         });
@@ -164,7 +170,6 @@ public class FavoritesActivity extends AppCompatActivity {
             @Override
             public void onCreate() {
                 currentDialogType = MORE_INFO;
-                System.out.println("current dialog type more info");
                 currentDog = dog;
             }
 
@@ -172,7 +177,6 @@ public class FavoritesActivity extends AppCompatActivity {
             public void onDismiss() {
                 currentDialogType = NO_DIALOG;
                 currentDog = null;
-                System.out.println("current dialog type none");
             }
         });
     }
@@ -220,6 +224,7 @@ public class FavoritesActivity extends AppCompatActivity {
             final TextView tvBreed = convertView.findViewById(R.id.tv_breed);
             final TextView tvRating = convertView.findViewById(R.id.tv_rating);
 
+            //if any of these text attributes are nonexistant, don't show their respective view
             tvName.setText(currentItem.getName());
             if(currentItem.getAge().trim().length() > 0) {
                 tvAge.setText(", " + currentItem.getAge());
@@ -241,6 +246,7 @@ public class FavoritesActivity extends AppCompatActivity {
 
             ivDog.setVisibility(View.GONE);
             progressBar.setVisibility(View.VISIBLE);
+            //use picasso to load the dog images in the listview
             Picasso.get()
                     .load(currentItem.getPicLocation())
                     .into(ivDog, new Callback() {
@@ -255,6 +261,7 @@ public class FavoritesActivity extends AppCompatActivity {
 
                         }
                     });
+            //set an on click listener for the image in the list item to open an inflated image of the dog
             ivDog.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -270,19 +277,16 @@ public class FavoritesActivity extends AppCompatActivity {
     }
 
     private void showImageDialog(Bitmap bitmap, final Dog dog){
-        System.out.println("show image dialog");
         AlertImageUtils.inflateImage(FavoritesActivity.this, bitmap, new OnDialogChanged() {
             @Override
             public void onCreate() {
                 currentDog = dog;
                 currentDialogType = IMAGE;
-                System.out.println("current dialog type image");
             }
 
             @Override
             public void onDismiss() {
                 currentDialogType = NO_DIALOG;
-                System.out.println("current dialog type none");
             }
         });
     }
@@ -299,8 +303,8 @@ public class FavoritesActivity extends AppCompatActivity {
     protected void onSaveInstanceState(Bundle outState){
         if(alertDialog != null && alertDialog.isShowing()) {
             AlertImageUtils.dismissCurrentDialog();
-            System.out.println("dialog type on save: " + currentDialogType);
             if (currentDialogType == MORE_INFO && currentDog != null) {
+                //if the more info dialog is open, make note of it and save which dog has been clicked
                 outState.putInt(DIALOG_TYPE, currentDialogType);
                 outState.putSerializable(CURRENT_DOG, currentDog);
             }

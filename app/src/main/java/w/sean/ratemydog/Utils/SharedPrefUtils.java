@@ -16,6 +16,8 @@ public class SharedPrefUtils {
     private static final String APP_SHARED_PREFS = "app_shared_preferences";
     private static final String ID_KEY = "id_key";
 
+    //user id's are generated in this class and saved in shared preferences since there is no
+    //login featre to this app
     public SharedPrefUtils(Context context) {
         this.appSharedPrefs = context.getSharedPreferences(APP_SHARED_PREFS, Context.MODE_PRIVATE);
         this.prefsEditor = appSharedPrefs.edit();

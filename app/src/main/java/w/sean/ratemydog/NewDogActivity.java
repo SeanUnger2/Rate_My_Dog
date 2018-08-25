@@ -94,14 +94,20 @@ public class NewDogActivity extends AppCompatActivity {
         btnSubmit = (Button) findViewById(R.id.btn_submit);
         pbSubmit = findViewById(R.id.pb_submit);
 
+        //if the user leaves the activity and restarts it, make sure the image shows up as expected
         if(savedInstanceState != null){
+            //if the image was there when the activity was killed, I saved a file location for
+            //easy retrieval of the image
             if(savedInstanceState.getSerializable(PHOTO_FILE) != null) {
                 progressBar.setVisibility(View.VISIBLE);
                 currentPhotoFile = (File)savedInstanceState.getSerializable(PHOTO_FILE);
+                //orient the image on a background thread because it takes some effort
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
+                            //make sure the image is oriented the right way because it gets
+                            //tilted sometimes when being saved to a file
                             orientImage(currentPhotoFile);
                             runOnUiThread(new Runnable() {
                                 @Override
@@ -149,6 +155,8 @@ public class NewDogActivity extends AppCompatActivity {
                             REQUEST_IMAGE_CAPTURE);
                 }else {
                     try{
+
+                        //create the implicit intent to access a camera app
                         dispatchTakePictureIntent();
                     }catch (IOException e){
                         e.printStackTrace();
@@ -166,13 +174,14 @@ public class NewDogActivity extends AppCompatActivity {
             try {
                 currentPhotoFile = createImageFile();
             } catch (IOException ex) {
-                System.out.println("Error occurred while creating the File");
                 return;
             }
             if (currentPhotoFile != null) {
                 Uri photoURI = FileProvider.getUriForFile(this,
                         "com.example.android.fileprovider",
                         currentPhotoFile);
+                //attach the photo file to the intent so the image gets stored to that location when
+                //it gets taken
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             }
@@ -217,7 +226,7 @@ public class NewDogActivity extends AppCompatActivity {
 
                             InputStream inputStream = NewDogActivity.this.getContentResolver().openInputStream(data.getData());
                             FileOutputStream fileOutputStream = new FileOutputStream(currentPhotoFile);
-                            // Copying
+                            // Copying the input over to a new file that we're creating for easy reference
                             copyStream(inputStream, fileOutputStream);
                             fileOutputStream.close();
                             inputStream.close();
@@ -267,10 +276,10 @@ public class NewDogActivity extends AppCompatActivity {
             InputStream ims = new FileInputStream(file);
             bitDog = BitmapFactory.decodeStream(ims);
 
+            //this ExifInterface class helps with orienting the image in the way it's meant to be viewed
             ExifInterface ei = new ExifInterface(file.getAbsolutePath().toString());
             orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION,
                     ExifInterface.ORIENTATION_UNDEFINED);
-            System.out.println("orientation " + orientation);
         }catch(IOException e){
             e.printStackTrace();
         }
@@ -289,7 +298,6 @@ public class NewDogActivity extends AppCompatActivity {
                 bitDog = rotateBitmap(bitDog, 270);
                 break;
             default:
-                System.out.println("default");
                 break;
         }
     }
@@ -301,6 +309,7 @@ public class NewDogActivity extends AppCompatActivity {
     }
 
     private void onClickChoosePicture(){
+        //create intent for selecting a photo from gallery
         findViewById(R.id.btn_choose_photo).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -322,12 +331,14 @@ public class NewDogActivity extends AppCompatActivity {
     }
 
     private void addDogToFirebase(final Dog newDog){
+        //dog name is the only required text field
         if(newDog.getName().equals("")){
             findViewById(R.id.iv_required).setVisibility(View.VISIBLE);
             btnSubmit.setEnabled(true);
             Toast.makeText(NewDogActivity.this, "Name field is required.", Toast.LENGTH_LONG).show();
             return;
         }
+        //a picture is required to submit
         if(bitDog==null){
             Toast.makeText(NewDogActivity.this, "Make sure you have uploaded a picture.", Toast.LENGTH_LONG).show();
             btnSubmit.setEnabled(true);
@@ -354,6 +365,7 @@ public class NewDogActivity extends AppCompatActivity {
                         "Error uploading data. You may not be connected to the internet.",
                         Toast.LENGTH_LONG).show();
             }
+            //if the image upload was successful, proced to upload the rest of the info to the main database
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -421,8 +433,7 @@ public class NewDogActivity extends AppCompatActivity {
     }
 
     private void exitActivity(){
-        Intent i = new Intent(NewDogActivity.this, MyPicsActivity.class);
-        startActivity(i);
+        finish();
     }
 
     @Override
@@ -433,14 +444,8 @@ public class NewDogActivity extends AppCompatActivity {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
+        //save the current photo file location
         outState.putSerializable(PHOTO_FILE, currentPhotoFile);
-        System.out.println("saved file: " + currentPhotoFile);
         super.onSaveInstanceState(outState);
-    }
-
-    @Override
-    protected void onDestroy(){
-
-        super.onDestroy();
     }
 }

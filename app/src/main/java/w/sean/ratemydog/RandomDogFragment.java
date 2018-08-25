@@ -61,7 +61,7 @@ public class RandomDogFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        System.out.println("on create");
+        //set the position of the adapter to a global variable
         this.position = getArguments() != null ? getArguments().getInt("num") : 1;
         isFavorited = false;
     }
@@ -69,6 +69,7 @@ public class RandomDogFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.layout_random_dog, container, false);
+        //initialize a lot of the views in this layout item
         final ImageView ivFavorite = (ImageView)v.findViewById(R.id.iv_favorite);
         final RatingBar ratingBar = (RatingBar)v.findViewById(R.id.rating_bar);
         final Button btnSubmitRating = (Button)v.findViewById(R.id.btn_submit_rating);
@@ -78,11 +79,17 @@ public class RandomDogFragment extends Fragment {
         final ImageView ivDog = v.findViewById(R.id.iv_dog);
         final Dog currentDog = mArrDogs.get(position);
 
+        //sets the fields to specific attributes of the dog
         setTextFields(v, currentDog);
+        //load the large image of the dog
         loadImage(cvRounded, ivDog, currentDog, progressBar);
+        //if the dog is already a favorite of the user, set the heart icon to be pink
         checkIfFavorited(ivFavorite);
+        //change the favorite state of the dog
         onClickFavorite(ivFavorite);
+        //initialize the rating bar to what the user's current rating is (or 0 if they've never rated the dog)
         setRating(ratingBar);
+        //update firebase to reflect the user's new rating of the dog
         onClickSubmitRating(btnSubmitRating, currentDog, tvOverallRating,ratingBar);
 
         return v;
@@ -91,6 +98,7 @@ public class RandomDogFragment extends Fragment {
     private void loadImage(final CardView cvRounded, final ImageView ivDog, Dog currentDog, final ProgressBar progressBar){
         progressBar.setVisibility(View.VISIBLE);
         cvRounded.setVisibility(View.INVISIBLE);
+        //use picasso to load the image in to the imageview
         Picasso.get()
                 .load(currentDog.getPicLocation())
                 .into(ivDog, new Callback() {
@@ -105,6 +113,7 @@ public class RandomDogFragment extends Fragment {
                     }
                 });
 
+        //on click listener for the image to display an inflated image of the dog
         ivDog.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -162,13 +171,13 @@ public class RandomDogFragment extends Fragment {
     }
 
     private void setRating(final RatingBar ratingBar){
+        //get the firebase rating node to see if the user has already rated this dog
         Dog.getSpecificRating(getContext(), mArrDogKeys.get(position), new OnGetDataListener() {
             @Override
             public void onSuccess(DataSnapshot dataSnapshot) {
                 int rating;
                 try {
                     rating = (int) dataSnapshot.getValue(Integer.class);
-                    System.out.println("here is the rating: " + rating);
                     ratingBar.setRating(rating);
                 }catch (Exception e){
                     e.printStackTrace();
@@ -179,6 +188,7 @@ public class RandomDogFragment extends Fragment {
     }
 
     private void checkIfFavorited(final ImageView ivFavorite){
+        //get the firebase favorited node to see if the user has already favorited this dog
         Dog.getFavoritesNode(getContext(), new OnGetDataListener() {
             @Override
             public void onSuccess(DataSnapshot dataSnapshot) {
@@ -194,6 +204,7 @@ public class RandomDogFragment extends Fragment {
     }
 
     private void onClickFavorite(final ImageView ivFavorite){
+        //update the firebase favorited node to reflect that the user favorited or unfavorited the dog
         ivFavorite.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -234,6 +245,7 @@ public class RandomDogFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 final String dogKey = mArrDogKeys.get(position);
+                //update the dog node so the dog's overall rating gets updated
                 Dog.getSpecificDog(getContext(), dogKey, new OnGetDataListener() {
                     @Override
                     public void onSuccess(DataSnapshot dataSnapshot) {
@@ -264,7 +276,6 @@ public class RandomDogFragment extends Fragment {
                     oldRating = (int) dataSnapshot.getValue(Integer.class);
                 }catch(NullPointerException e){
                     //user hasn't set any ratings yet
-                    System.out.println("Couldn't locate the rating");
                     e.printStackTrace();
                     oldRating = -1;
                 }
@@ -306,7 +317,6 @@ public class RandomDogFragment extends Fragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        System.out.println("on activity created");
     }
 
 

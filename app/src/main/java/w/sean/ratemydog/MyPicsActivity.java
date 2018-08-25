@@ -70,8 +70,11 @@ public class MyPicsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_pics);
 
+        //check network status
         NetworkUtils.checkNetworkStatus(this);
 
+        //if the user had the "more info" alert open right before stopping and restarting the activity, make sure it shows
+        //up as expected when the activity gets recreated
         if(savedInstanceState!=null ){
             currentDialogType = savedInstanceState.getInt(DIALOG_TYPE);
             currentDog = (Dog)savedInstanceState.getSerializable(CURRENT_DOG);
@@ -81,7 +84,6 @@ public class MyPicsActivity extends AppCompatActivity {
                 }
             }
         }else{
-            System.out.println("saved instance state is null");
             currentDialogType = NO_DIALOG;
             currentDog = null;
         }
@@ -118,6 +120,9 @@ public class MyPicsActivity extends AppCompatActivity {
     }
 
     private void retrieveMyDogs(){
+        //each dog in the "my dogs" node on firebase is just a pointer to the master list of dogs (in a different node). So
+        //we need to make 2 callbacks here: one to get each dog from the my dogs node, and one to get each of those dogs
+        //from the master list
         Dog.getMyDogsNode(this, new OnGetDataListener() {
             @Override
             public void onSuccess(DataSnapshot dataSnapshot) {
@@ -136,7 +141,6 @@ public class MyPicsActivity extends AppCompatActivity {
                             }else{  //dog is null, which means it no longer exists in the master list
                                 sizeOfMyDogs -= 1;
                             }
-                            System.out.println("here is the array size: " + arrMyDogs.size());
                             //wait to set the adapter until the array is full
                             if(arrMyDogs.size()==sizeOfMyDogs){
                                 setAdapter();
@@ -170,7 +174,6 @@ public class MyPicsActivity extends AppCompatActivity {
             @Override
             public void onCreate() {
                 currentDialogType = MORE_INFO;
-                System.out.println("current dialog type more info");
                 currentDog = dog;
             }
 
@@ -178,7 +181,6 @@ public class MyPicsActivity extends AppCompatActivity {
             public void onDismiss() {
                 currentDialogType = NO_DIALOG;
                 currentDog = null;
-                System.out.println("current dialog type none");
             }
         });
     }
@@ -226,6 +228,7 @@ public class MyPicsActivity extends AppCompatActivity {
             final TextView tvBreed = convertView.findViewById(R.id.tv_breed);
             final TextView tvRating = convertView.findViewById(R.id.tv_rating);
 
+            //if any of these text attributes are nonexistant, don't show their respective view
             tvName.setText(currentItem.getName());
             if(currentItem.getAge().trim().length() > 0) {
                 tvAge.setText(", " + currentItem.getAge());
@@ -247,6 +250,7 @@ public class MyPicsActivity extends AppCompatActivity {
 
             ivDog.setVisibility(View.GONE);
             progressBar.setVisibility(View.VISIBLE);
+            //use picasso to load the dog images in the listview
             Picasso.get()
                     .load(currentItem.getPicLocation())
                     .into(ivDog, new Callback() {
@@ -261,6 +265,8 @@ public class MyPicsActivity extends AppCompatActivity {
 
                         }
                     });
+
+            //set an on click listener for the image in the list item to open an inflated image of the dog
             ivDog.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -275,19 +281,16 @@ public class MyPicsActivity extends AppCompatActivity {
     }
 
     private void showImageDialog(Bitmap bitmap, final Dog dog){
-        System.out.println("show image dialog");
         AlertImageUtils.inflateImage(MyPicsActivity.this, bitmap, new OnDialogChanged() {
             @Override
             public void onCreate() {
                 currentDog = dog;
                 currentDialogType = IMAGE;
-                System.out.println("current dialog type image");
             }
 
             @Override
             public void onDismiss() {
                 currentDialogType = NO_DIALOG;
-                System.out.println("current dialog type none");
             }
         });
     }
@@ -320,8 +323,8 @@ public class MyPicsActivity extends AppCompatActivity {
     protected void onSaveInstanceState(Bundle outState){
         if(alertDialog != null && alertDialog.isShowing()) {
             AlertImageUtils.dismissCurrentDialog();
-            System.out.println("dialog type on save: " + currentDialogType);
             if (currentDialogType == MORE_INFO && currentDog != null) {
+                //if the more info dialog is open, make note of it and save which dog has been clicked
                 outState.putInt(DIALOG_TYPE, currentDialogType);
                 outState.putSerializable(CURRENT_DOG, currentDog);
             }
